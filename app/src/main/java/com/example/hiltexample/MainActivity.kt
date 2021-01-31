@@ -36,13 +36,16 @@ class MainActivity : AppCompatActivity() {
 
 // Constructor Injection...
 // @Inject make it available at compile time.
-class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass) {
+class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass,private val someInterfaceImpl: someInterface) {
 
         fun doSomething():String{
             return "sardar"
         }
     fun doSomeOtherThing():String{
         return someOtherClass.doSomethingOther()
+    }
+    fun doSomeThingFromFragment():String{
+        return someInterfaceImpl.getAThing()
     }
 }
 
@@ -74,4 +77,14 @@ class myFragment: Fragment(){
     @Inject lateinit var someClass: SomeClass
 
 }
+
+interface someInterface{
+    fun getAThing():String
+}
+
+class someInterfaceImpl @Inject constructor() :someInterface{
+    override fun getAThing(): String  =  "Return Some thing from Interface"
+
+}
+
 
