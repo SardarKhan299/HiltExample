@@ -4,7 +4,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
+import com.google.gson.Gson
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.components.ApplicationComponent
 import dagger.hilt.android.scopes.ActivityScoped
 import dagger.hilt.android.scopes.FragmentScoped
 import javax.inject.Inject
@@ -31,12 +37,16 @@ class MainActivity : AppCompatActivity() {
         Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomething()}")
         Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomeOtherThing()} ")
         Log.d(MainActivity::class.simpleName, "onCreate: ${myActivity.doSomethingOther()}")
+        Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomeThingFromInterface()}")
     }
 }
 
 // Constructor Injection...
 // @Inject make it available at compile time.
-class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass,private val someInterfaceImpl: someInterface) {
+// issue of Adding Interface in constructor injection...
+// solve this using @Bind or @Provides...
+class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass,
+                                    private val someInterfaceImpl: someInterface) {
 
         fun doSomething():String{
             return "sardar"
@@ -44,7 +54,7 @@ class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass,p
     fun doSomeOtherThing():String{
         return someOtherClass.doSomethingOther()
     }
-    fun doSomeThingFromFragment():String{
+    fun doSomeThingFromInterface():String{
         return someInterfaceImpl.getAThing()
     }
 }
@@ -84,7 +94,40 @@ interface someInterface{
 
 class someInterfaceImpl @Inject constructor() :someInterface{
     override fun getAThing(): String  =  "Return Some thing from Interface"
+}
+
+// Use of @Bind..
+@InstallIn(ApplicationComponent::class) // Application Level Scope of this module...
+@Module
+abstract class myModuleClass{
+    @Singleton
+    @Binds
+    abstract fun bindSomeDependency(someInterfaceImpl: someInterfaceImpl):someInterface
+
+    // This is the issue of Bind it cannot cover all the scenarios...///
+//    @Singleton
+//    @Binds
+//    abstract fun bindGson(gson: Gson):Gson
 
 }
 
 
+
+// Use of Provides.
+@InstallIn(ApplicationComponent::class) // Application Level Scope of this module...
+@Module
+class myModuleClassProvides{
+
+    @Singleton
+    @Provides
+    fun provideSomeInterface():someInterface{
+        return someInterfaceImpl()
+    }
+
+    @Singleton
+    @Provides
+    fun provideGson():Gson{
+        return Gson()
+    }
+
+}
