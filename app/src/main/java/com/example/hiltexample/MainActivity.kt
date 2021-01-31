@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
 // @Inject make it available at compile time.
 class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass) {
+
         fun doSomething():String{
             return "sardar"
         }
