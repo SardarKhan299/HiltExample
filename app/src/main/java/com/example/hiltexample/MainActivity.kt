@@ -14,6 +14,7 @@ import dagger.hilt.android.components.ApplicationComponent
 import dagger.hilt.android.scopes.ActivityScoped
 import dagger.hilt.android.scopes.FragmentScoped
 import javax.inject.Inject
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @AndroidEntryPoint
@@ -38,6 +39,8 @@ class MainActivity : AppCompatActivity() {
         Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomeOtherThing()} ")
         Log.d(MainActivity::class.simpleName, "onCreate: ${myActivity.doSomethingOther()}")
         Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomeThingFromInterface()}")
+        Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomeThing1()}")
+        Log.d(MainActivity::class.simpleName, "onCreate: ${myClasss.doSomeThing2()}")
     }
 }
 
@@ -46,7 +49,9 @@ class MainActivity : AppCompatActivity() {
 // issue of Adding Interface in constructor injection...
 // solve this using @Bind or @Provides...
 class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass,
-                                    private val someInterfaceImpl: someInterface) {
+                                    private val someInterfaceImpl: someInterface,
+                                    @Impl1 private val someInterfaceImpl1: someInterface,
+                                    @Impl2 private val someInterfaceImpl2: someInterface) {
 
         fun doSomething():String{
             return "sardar"
@@ -56,6 +61,13 @@ class SomeClass @Inject constructor(private val someOtherClass: SomeOtherClass,
     }
     fun doSomeThingFromInterface():String{
         return someInterfaceImpl.getAThing()
+    }
+
+    fun doSomeThing1():String{
+        return someInterfaceImpl1.getAThing()
+    }
+    fun doSomeThing2():String{
+        return someInterfaceImpl2.getAThing()
     }
 }
 
@@ -96,20 +108,28 @@ class someInterfaceImpl @Inject constructor() :someInterface{
     override fun getAThing(): String  =  "Return Some thing from Interface"
 }
 
-// Use of @Bind..
-@InstallIn(ApplicationComponent::class) // Application Level Scope of this module...
-@Module
-abstract class myModuleClass{
-    @Singleton
-    @Binds
-    abstract fun bindSomeDependency(someInterfaceImpl: someInterfaceImpl):someInterface
+class someInterfaceImpl1 @Inject constructor() :someInterface{
+    override fun getAThing(): String  =  "Return Some thing1 from Interface"
+}
 
-    // This is the issue of Bind it cannot cover all the scenarios...///
+class someInterfaceImpl2 @Inject constructor() :someInterface{
+    override fun getAThing(): String  =  "Return Some thing2 from Interface"
+}
+
+//// Use of @Bind..
+//@InstallIn(ApplicationComponent::class) // Application Level Scope of this module...
+//@Module
+//abstract class myModuleClass{
 //    @Singleton
 //    @Binds
-//    abstract fun bindGson(gson: Gson):Gson
-
-}
+//    abstract fun bindSomeDependency(someInterfaceImpl: someInterfaceImpl):someInterface
+//
+//    // This is the issue of Bind it cannot cover all the scenarios...///
+////    @Singleton
+////    @Binds
+////    abstract fun bindGson(gson: Gson):Gson
+//
+//}
 
 
 
@@ -124,6 +144,20 @@ class myModuleClassProvides{
         return someInterfaceImpl()
     }
 
+    @Impl1
+    @Singleton
+    @Provides
+    fun provideSomeInterface1():someInterface{
+        return someInterfaceImpl1()
+    }
+
+    @Impl2
+    @Singleton
+    @Provides
+    fun provideSomeInterface2():someInterface{
+        return someInterfaceImpl2()
+    }
+
     @Singleton
     @Provides
     fun provideGson():Gson{
@@ -131,3 +165,15 @@ class myModuleClassProvides{
     }
 
 }
+
+
+
+// These qualifiers use to identify the Implementation of The Same Interface.
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class Impl1
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class Impl2
+
